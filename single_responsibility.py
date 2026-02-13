@@ -49,59 +49,78 @@ EACH CLASS MUST HAVE ONE SINGLE RESPONSIBILITY
 EACH METHOD MUST HAVE ONE SINGLE RESPONSIBILITY
 """
 
+# =========================
+# INVENTORY RESPONSIBILITY
+# =========================
+
 class InventoryService:
     def check_item(self, item_name):
-        print(f"Checking DB for {item_name}")
+        print(f"Checking inventory for {item_name}")
         return True
 
+    def reserve_item(self, item_name):
+        print(f"Reserving {item_name} from inventory")
+
+
+# =========================
+# PACKAGING RESPONSIBILITY
+# =========================
 
 class PackagingService:
-    def package(self, packaging_type):
+    def package_item(self, packaging_type):
         if packaging_type == "GIFT":
-            print("using gift wrap")
+            print("Using gift wrap")
+            print("Adding greeting card")
         else:
-            print("using normal wrap")
+            print("Using normal wrap")
 
+
+# =========================
+# SHIPPING RESPONSIBILITY
+# =========================
 
 class ShippingService:
-    def ship(self, category):
-        if category == "LOW EXPENSIVE":
-            print("Assigned to Delhivery")
+    def ship_item(self, category):
+        if category == "ULTRA EXPENSIVE":
+            print("Shipping via EKART")
         else:
-            print("Assigned to EKART")
+            print("Shipping via Delhivery")
 
-# USED THIS AS A COMPOSITION CLASS TO GLUE ALL TOGETHER
+
+# =========================
+# ORDER RESPONSIBILITY
+# =========================
+
 class OrderService:
-    def __init__(self, inventory, packaging, shipping):
-        self.inventory = inventory
-        self.packaging = packaging
-        self.shipping = shipping
+    def __init__(self):
+        self.inventory_service = InventoryService()
+        self.packaging_service = PackagingService()
+        self.shipping_service = ShippingService()
 
-    def process_order(self, item, category, packaging_type):
-        if self.inventory.check_item(item):
-            self.packaging.package(packaging_type)
-            self.shipping.ship(category)
+    def process_order(self, item_name, category, packaging_type):
+        if self.inventory_service.check_item(item_name):
+            self.inventory_service.reserve_item(item_name)
+            self.packaging_service.package_item(packaging_type)
+            self.shipping_service.ship_item(category)
+            print("Order processed successfully")
 
+
+# =========================
+# MAIN METHOD
+# =========================
 
 def main():
-    # Create individual services
-    inventory_service = InventoryService()
-    packaging_service = PackagingService()
-    shipping_service = ShippingService()
-
-    # Inject dependencies into OrderService
-    order_service = OrderService(
-        inventory=inventory_service,
-        packaging=packaging_service,
-        shipping=shipping_service
-    )
-
-    # Process an order
+    order_service = OrderService()
     order_service.process_order(
-        item="iPhone 16",
+        item_name="iPhone 16",
         category="ULTRA EXPENSIVE",
         packaging_type="GIFT"
     )
+
+
+if __name__ == "__main__":
+    main()
+
 
 
 if __name__ == "__main__":

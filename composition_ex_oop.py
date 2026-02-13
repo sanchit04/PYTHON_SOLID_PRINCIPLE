@@ -1,5 +1,34 @@
 from abc import ABC, abstractmethod
 
+"""
+Composition means:
+A class is built using other objects, instead of inheriting behavior.
+In simple words:
+OrderService HAS-A InventoryService
+OrderService HAS-A PackagingService
+OrderService HAS-A ShippingService
+Instead of:
+OrderService IS-A InventoryService
+
+What Makes It Good Composition?
+Behavior Delegation
+OrderService doesn’t:
+    Check DB itself
+    Package item itself
+    Ship item itself
+It delegates to composed objects.
+That’s proper separation.
+
+Use inheritance when:
+    You truly have an "IS-A" hierarchy
+    Behavior is mostly shared
+    Variation is small and controlled
+    
+Use composition when:
+    Behavior varies independently
+    You expect growth
+    Responsibilities are separable
+"""
 
 # =========================
 # INVENTORY RESPONSIBILITY
@@ -8,18 +37,23 @@ from abc import ABC, abstractmethod
 AS PART OF DEPENDENCY INVERSION PRINCIPLE Inventory service is converted to ABC
 So that any new Inventory can be supported in future also helps in OCP (Open Closed Principle)
 """
+
+
 class InventoryService(ABC):
     @abstractmethod
-    def check_item(self,item_name):
+    def check_item(self, item_name):
         pass
 
     @abstractmethod
-    def reserve_item(self,item_name):
+    def reserve_item(self, item_name):
         pass
+
 
 """
 Created a default implementation
 """
+
+
 class DefaultInventoryService(InventoryService):
     def check_item(self, item_name):
         print(f"Checking inventory for {item_name}")
@@ -37,10 +71,12 @@ AS PART OF DEPENDENCY INVERSION PRINCIPLE PackagingService is converted to ABC
 So that any new Inventory can be supported in future also helps in OCP (Open Closed Principle)
 """
 
+
 class PackagingService(ABC):
     @abstractmethod
-    def package_item(self,packaging_type):
+    def package_item(self, packaging_type):
         pass
+
 
 """
 In this case liskov substitution is not violated since parent commits that item will be packaged
@@ -65,12 +101,14 @@ class GiftPackagingService(PackagingService):
 class NormalPackagingService(PackagingService):
     def packaging_item(self):
         print("Using normal wrap")
-        
+
 class WoodenPackagingService(PackagingService):
     def packaging_item(self):
         print("Using wooden packaging")
 
 """
+
+
 class DefaultPackagingService(PackagingService):
     def package_item(self, packaging_type):
         if packaging_type == "GIFT":
@@ -90,10 +128,12 @@ class Trackable(ABC):
     def track_service(self):
         pass
 
+
 class ETAChecker(ABC):
     @abstractmethod
     def eta_service(self):
         pass
+
 
 class ShippingService(ABC):
 
@@ -116,7 +156,7 @@ class EkartShippingService(ShippingService):
     # NO EKART DOES NOT HAVE TO IMPLEMENT TRACK AND ETA SERVICE
 
 
-class DelhiveryShippingService(ShippingService,ETAChecker,Trackable):
+class DelhiveryShippingService(ShippingService, ETAChecker, Trackable):
     def ship_item(self):
         print("Shipping via Delhivery")
 
@@ -151,22 +191,24 @@ PROBLEM:
             self.shipping_service = EkartShippingService()
         else:
             self.shipping_service = DelhiveryShippingService()
-            
+
 FIX 
 
 Get the objects as parameter of abstract base class
 InventoryService and PackagingService need to create ABCs
 """
+
+
 class OrderService:
     # We are now injecting ABCs as object derived by main method
     # Thus making OrderService completely independent
     # of any changes to Inventory, Packaging or Shipping
-    def __init__(self, inventory_service:InventoryService,
-                 packaging_service:PackagingService,
+    def __init__(self, inventory_service: InventoryService,
+                 packaging_service: PackagingService,
                  shipping_service: ShippingService
                  ):
         self.inventory_service = inventory_service
-        self. packaging_service = packaging_service
+        self.packaging_service = packaging_service
         self.shipping_service = shipping_service
 
     def process_order(self, item_name, packaging_type):
@@ -179,21 +221,18 @@ class OrderService:
             THIS IS WHERE we are checking if the service provides TRACKABLE AND ETA feature
             IN CASE OF DELHIVERY IT WILL show and in case of EKART it wont show!
             """
-            if isinstance(self.shipping_service,Trackable):
+            if isinstance(self.shipping_service, Trackable):
                 self.shipping_service.track_service()
-            if isinstance(self.shipping_service,ETAChecker):
+            if isinstance(self.shipping_service, ETAChecker):
                 self.shipping_service.eta_service()
 
-
             print("Order processed successfully")
-
 
 
 # =========================
 # MAIN
 # =========================
 def main():
-
     print("---- Normal Order Flow ----")
 
     # NOW since order shipping service is totally independent of objects which are passed to it
@@ -209,8 +248,7 @@ def main():
     else:
         shipping_service = DelhiveryShippingService()
 
-
-    order_service = OrderService(inventory_service,packaging_service,shipping_service)
+    order_service = OrderService(inventory_service, packaging_service, shipping_service)
 
     order_service.process_order(
         item_name="iPhone 16",

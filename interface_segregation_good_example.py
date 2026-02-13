@@ -28,6 +28,46 @@ class PackagingService:
 # =========================
 # SHIPPING ABSTRACTION
 # =========================
+
+"""
+DELIHIVERY HAS STARTED SUPPORTING TRACK and ETA service
+THIS SERVICE IS NOT AVAILABLE IN BLUEDAART
+Since not SHIPPING SERVICE IS added track and etc as abstract all subclasses have to implement it
+IN this case EKARTSHIPPINGSERVICE will have to implement it which has no feature of track and eta
+THIS IS DIRECT VIOLATION OF INTERFACE SEGREGATION PRINCIPLE
+ISP violation often leads to LSP violation.
+
+PROBLEM:
+
+class ShippingService(ABC):
+
+    @abstractmethod
+    def ship_item(self):
+        pass
+
+    @abstractmethod
+    def track_service(self):
+        pass
+
+    @abstractmethod
+    def eta_service(self):
+        pass
+
+
+FIX: 
+Should segregate track and eta service seperately
+"""
+
+class Trackable(ABC):
+    @abstractmethod
+    def track_service(self):
+        pass
+
+class ETAChecker(ABC):
+    @abstractmethod
+    def eta_service(self):
+        pass
+
 class ShippingService(ABC):
 
     @abstractmethod
@@ -35,42 +75,30 @@ class ShippingService(ABC):
         pass
 
 
-# =========================
-# LSP VIOLATING IMPLEMENTATION
-# =========================
-"""
-IN this case EKART is only supporting ULTRA expensive shipments
-If now a low expensive shipment is asked to be delivered it will raise exception
-Whereas Shipping service base class (parent class) promises us the shipment will happen
-But subclass EkartShippingService child is adding its own rule to decide
-if shipment will happen or not this is a clear violation of Liskov substitution priciple
-child should not change the behaviour of what parent has defined!
-
-FIX:
-INSTEAD OF DEFINING WHEN TO SHIP or when not to ship this should be passed to ORDERSERVICE instead of 
-EkartShippingService so that child does not change the behaviour of parent
-
-PROBLEM CODE:
 class EkartShippingService(ShippingService):
 
-    def __init__(self, category):
-        self.category = category
-
-    def ship_item(self):
-        if self.category != "ULTRA_EXPENSIVE":
-            raise Exception("EKART only supports ULTRA_EXPENSIVE items")
-        print("Shipping via EKART")
-"""
-
-class EkartShippingService(ShippingService):
-    # ALL THE CODE FOR UltraExpensive shipping check will move to OrderService
-    # So that EkartShippingService will only be shipping
     def ship_item(self):
         print("Shipping via Ekart")
+    # # WE HAD TO IMPLEMENT BOTH TRACK AND ETA HERE SINCE BASE CLASS DEMANDS IT
+    # # ITS UNNECESSARY! STILL HAVE TO IMPLEMENT IT
+    # def track_service(self):
+    #     print("I dont know what to do here")
+    #
+    # def eta_service(self):
+    #     print("I dont know what to do here")
+    # NO EKART DOES NOT HAVE TO IMPLEMENT TRACK AND ETA SERVICE
 
-class DelhiveryShippingService(ShippingService):
+
+class DelhiveryShippingService(ShippingService,ETAChecker,Trackable):
     def ship_item(self):
         print("Shipping via Delhivery")
+
+    # SINCE DELHIVERY HAS THIS FEATURE ONLY DELHIVERY IMPLEMENTS
+    def track_service(self):
+        print("TRACKING IS ENABLED")
+
+    def eta_service(self):
+        print("ETA TO DELIVER IS 2 HOURS!")
 
 
 # =========================
@@ -92,15 +120,19 @@ class OrderService:
             self.inventory_service.reserve_item(item_name)
             self.packaging_service.package_item(packaging_type)
             self.shipping_service.ship_item()
+
+            """
+            THIS IS WHERE we are checking if the service provides TRACKABLE AND ETA feature
+            IN CASE OF DELHIVERY IT WILL show and in case of EKART it wont show!
+            """
+            if isinstance(self.shipping_service,Trackable):
+                self.shipping_service.track_service()
+            if isinstance(self.shipping_service,ETAChecker):
+                self.shipping_service.eta_service()
+
+
             print("Order processed successfully")
 
-
-# =========================
-# GENERIC FUNCTION (To show LSP break)
-# =========================
-def test_shipping(shipping: ShippingService):
-    print("\nTesting generic shipping function...")
-    shipping.ship_item()
 
 
 # =========================
@@ -109,7 +141,7 @@ def test_shipping(shipping: ShippingService):
 def main():
 
     print("---- Normal Order Flow ----")
-    order_service = OrderService(category="ULTRA_EXPENSIVE")
+    order_service = OrderService(category="LOW_EXPENSIVE")
     order_service.process_order(
         item_name="iPhone 16",
         packaging_type="NORMAL"

@@ -88,7 +88,9 @@ class ShippingService:
 
 
 # =========================
-# ORDER RESPONSIBILITY
+# ORDER RESPONSIBILITY KIND OF ACT AS A ORCHESTRATOR SINCE WE ARE DEALING WITH MULTIPLE SERVICES
+# Why we can't do this in main itself? Its not correct main should only act as an entry point
+# we should not add business logic to it
 # =========================
 
 class OrderService:
@@ -120,12 +122,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-if __name__ == "__main__":
-    main()
-
 
 
 

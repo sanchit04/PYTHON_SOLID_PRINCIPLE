@@ -203,7 +203,12 @@ def main():
 
     inventory_service = DefaultInventoryService()
     packaging_service = DefaultPackagingService()
-
+    """
+    To remove business rule from main:
+    → Introduce a Factory (or Registry-based Factory) (Its a design pattern covered in later part)
+    → Let it decide shipping
+    → Keep main as composition root only
+    """
     if category == "ULTRA_EXPENSIVE":
         shipping_service = EkartShippingService()
     else:

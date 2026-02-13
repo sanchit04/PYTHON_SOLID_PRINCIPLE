@@ -16,7 +16,10 @@ class InventoryService:
 # =========================
 # PACKAGING RESPONSIBILITY
 # =========================
-
+"""
+We are not applying OCP here because packaging type 
+is not going to grow in it will always be GIFT OR NORMAL
+"""
 class PackagingService:
     def package_item(self, packaging_type):
         if packaging_type == "GIFT":
